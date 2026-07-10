@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model Animes {
+  id        Int         @id @default(autoincrement())
+  title     String
+  link      String      @unique
+  type      String?
+  sinopsis  String?     @db.Text
+  genres    String?     @db.Text
+  score     Float?
+  year      Int?
+  status    String?
+  broadcast String?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime
+  img       String?
+  episodes  Int?
+  Episode   Episode[]
+  Favorites Favorites[]
+}
+
+model Episode {
+  id         Int      @id @default(autoincrement())
+  number     Int
+  videoToken String?
+  animeId    Int
+  createdAt  DateTime @default(now())
+  updateAt   DateTime
+  Animes     Animes   @relation(fields: [animeId], references: [id])
+
+  @@unique([number, animeId])
+  @@index([animeId], map: "Episode_animeId_fkey")
+}
+
+model Favorites {
+  id      Int    @id @default(autoincrement())
+  animeId Int
+  userId  Int
+  Animes  Animes @relation(fields: [animeId], references: [id])
+  Users   Users  @relation(fields: [userId], references: [id])
+
+  @@unique([userId, animeId])
+  @@index([animeId], map: "Favorites_animeId_fkey")
+}
+
+model Users {
+  id        Int         @id @default(autoincrement())
+  nickname String       @unique
+  email     String      @unique
+  password String
+  isActive  Boolean
+  expiresAt DateTime    @default(now())
+  deviceId  String?      @unique
+  createdAt DateTime    @default(now())
+  Favorites Favorites[]
+}
