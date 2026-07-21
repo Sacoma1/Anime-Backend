@@ -20,6 +20,6 @@ router.get("/topRating", getBestAnimes);
 router.get("/random", getRandomAnime);
 
 //private
-router.get("/stream/:episodeId", protect, getAnimeLink);
+router.get("/stream/:title/:episodes", getAnimeLink);
 
 export default router;

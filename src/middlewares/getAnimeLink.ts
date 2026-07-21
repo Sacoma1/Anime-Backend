@@ -6,13 +6,20 @@ export const getAnimeLink = async (
   res: Response,
   next: NextFunction,
 ) => {
-  const { episodeId } = req.params;
+  const { title, episodes } = req.params;
 
   try {
-    const episode = await prisma.episode.findUnique({
-      where: { id: Number(episodeId) },
+    const episode = await prisma.episode.findFirst({
+      where: {
+        number: Number(episodes),
+        Animes: { link: decodeURIComponent(String(title)) },
+      },
       select: {
         videoToken: true,
+        number: true,
+        Animes: {
+          select: { link: true, id: true },
+        },
       },
     });
 

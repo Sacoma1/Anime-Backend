@@ -8,7 +8,7 @@ export const getAllAnimes = async (req: Request, res: Response) => {
       include: {
         Episode: true,
       },
-      take: 20,
+      take: 100,
     });
 
     if (getAllAnimes.length === 0) {
@@ -58,7 +58,7 @@ export const getAnimeById = async (req: Request, res: Response) => {
 export const getAnimeOnAir = async (req: Request, res: Response) => {
   try {
     const thisSeason = await prisma.animes.findMany({
-      where: { status: "Currently airing" },
+      where: { OR: [{ status: "Currently airing" }, { status: "En emisión" }] },
     });
     if (!thisSeason) {
       return res.status(200).json({
