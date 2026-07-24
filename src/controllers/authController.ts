@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { prisma } from "../config/db.js";
 import bcrypt from "bcryptjs";
 import { generateToken } from "../utils/generateJwt.js";
+import { verify } from "otplib";
 
 export const signup = async (req: Request, res: Response) => {
   try {
@@ -58,36 +59,33 @@ export const signup = async (req: Request, res: Response) => {
 };
 
 export const login = async (req: Request, res: Response) => {
-  const { email, password } = req.body;
+  try {
+    const { code } = req.body;
 
-  const user = await prisma.users.findUnique({
-    where: { email: email },
-  });
+    if (!code) {
+      return res.status(400).json({ error: "Falta codigo de verificacion" });
+    }
+    const secret = process.env.ADMIN_PASSWORD || "";
 
-  if (!user) {
-    return res.status(401).json({ error: "Correo o contrasena invalido" });
-  }
+    const { valid } = await verify({ secret, token: code });
 
-  //verify pass
-  const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!valid) {
+      return res.status(401).json({ error: "Codigo no valido" });
+    }
 
-  if (!isPasswordValid) {
-    return res.status(401).json({ error: "Correo o contrasena invalido" });
-  }
-  //generate jwt token
-  const token = generateToken(user.id.toString(), res);
+    const token = generateToken("Admin", res);
 
-  res.status(201).json({
-    status: "success",
-    data: {
-      user: {
-        id: user.id,
-
-        email: email,
+    return res.status(200).json({
+      status: "success",
+      data: {
+        role: "Admin",
+        token,
       },
-      token,
-    },
-  });
+    });
+  } catch (e: any) {
+    console.error("Error en admin login", e);
+    return res.status(500).json({ error: "Error en el servidor" });
+  }
 };
 
 export const logout = async (req: Request, res: Response) => {

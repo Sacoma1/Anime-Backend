@@ -1,6 +1,5 @@
 import type { Request, Response } from "express";
 import { prisma } from "../config/db.js";
-import { rmSync } from "node:fs";
 
 export const getAllAnimes = async (req: Request, res: Response) => {
   try {
@@ -8,7 +7,6 @@ export const getAllAnimes = async (req: Request, res: Response) => {
       include: {
         Episode: true,
       },
-      take: 100,
     });
 
     if (getAllAnimes.length === 0) {
@@ -59,6 +57,7 @@ export const getAnimeOnAir = async (req: Request, res: Response) => {
   try {
     const thisSeason = await prisma.animes.findMany({
       where: { OR: [{ status: "Currently airing" }, { status: "En emisión" }] },
+      take: 20,
     });
     if (!thisSeason) {
       return res.status(200).json({
@@ -83,7 +82,6 @@ export const getBestAnimes = async (req: Request, res: Response) => {
   try {
     const bestAnimes = await prisma.animes.findMany({
       where: { score: { gt: 8.5 } },
-      take: 15,
     });
 
     if (!bestAnimes)
@@ -109,7 +107,6 @@ export const getRandomAnime = async (req: Request, res: Response) => {
   try {
     const bestAnimes = await prisma.animes.findMany({
       where: { score: { gt: 8.5 } },
-      take: 15,
     });
 
     if (!bestAnimes) {
