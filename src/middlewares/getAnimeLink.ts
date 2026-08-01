@@ -49,7 +49,8 @@ export const getStreamProxy = async (req: Request, res: Response) => {
     return res.status(400).json({ error: "Token no proporcionado" });
   }
 
-  const targetUrl = `https://player.zilla-networks.com/m3u8/${token}`;
+  const zillaBaseUrl = "https://player.zilla-networks.com";
+  const targetUrl = `${zillaBaseUrl}/m3u8/${token}`;
 
   try {
     const response = await fetch(targetUrl, {
@@ -68,10 +69,33 @@ export const getStreamProxy = async (req: Request, res: Response) => {
       );
       return res
         .status(response.status)
-        .json({ error: "El servidor de video rechazo la peticion" });
+        .json({ error: "El servidor de video rechazó la petición" });
     }
 
-    const manifestText = await response.text();
+    let manifestText = await response.text();
+
+    const lastSlashIndex = targetUrl.lastIndexOf("/");
+    const tokenBasePath = targetUrl.substring(0, lastSlashIndex + 1);
+
+    manifestText = manifestText
+      .split("\n")
+      .map((line) => {
+        const trimmedLine = line.trim();
+
+        if (
+          trimmedLine &&
+          !trimmedLine.startsWith("#") &&
+          !trimmedLine.startsWith("http")
+        ) {
+          if (trimmedLine.startsWith("/")) {
+            return `${zillaBaseUrl}${trimmedLine}`;
+          } else {
+            return `${tokenBasePath}${trimmedLine}`;
+          }
+        }
+        return line;
+      })
+      .join("\n");
 
     res.setHeader("Content-Type", "application/x-mpegURL");
     res.setHeader("Access-Control-Allow-Origin", "*");
