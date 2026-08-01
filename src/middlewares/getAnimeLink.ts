@@ -30,7 +30,7 @@ export const getAnimeLink = async (
       });
     }
 
-    const url = `https://monoschinos-api.duckdns.org/animes/proxy/${episode.videoToken}`;
+    const url = `https://monoschinos-api.duckdns.org/animes/stream-proxy/${episode.videoToken}`;
 
     return res.status(200).json({
       status: "Success",
