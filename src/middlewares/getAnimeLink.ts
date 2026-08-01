@@ -30,7 +30,7 @@ export const getAnimeLink = async (
       });
     }
 
-    const url = `https://monoschinos-api.duckdns.org/animes/stream-proxy/${episode.videoToken}`;
+    const url = `https://player.zilla-networks.com/m3u8/${episode.videoToken}`;
 
     return res.status(200).json({
       status: "Success",
@@ -39,72 +39,5 @@ export const getAnimeLink = async (
   } catch (e: any) {
     console.error("No se encontro link para el episodio seleccionado", e);
     res.status(500).json({ error: "Error en el link" });
-  }
-};
-
-export const getStreamProxy = async (req: Request, res: Response) => {
-  const { token } = req.params;
-
-  if (!token) {
-    return res.status(400).json({ error: "Token no proporcionado" });
-  }
-
-  const zillaBaseUrl = "https://player.zilla-networks.com";
-  const targetUrl = `${zillaBaseUrl}/m3u8/${token}`;
-
-  try {
-    const response = await fetch(targetUrl, {
-      method: "GET",
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        Referer: "https://player.zilla-networks.com/",
-        Origin: "https://player.zilla-networks.com",
-      },
-    });
-
-    if (!response.ok) {
-      console.error(
-        `Error de Zilla: ${response.status} ${response.statusText}`,
-      );
-      return res
-        .status(response.status)
-        .json({ error: "El servidor de video rechazó la petición" });
-    }
-
-    let manifestText = await response.text();
-
-    const lastSlashIndex = targetUrl.lastIndexOf("/");
-    const tokenBasePath = targetUrl.substring(0, lastSlashIndex + 1);
-
-    manifestText = manifestText
-      .split("\n")
-      .map((line) => {
-        const trimmedLine = line.trim();
-
-        if (
-          trimmedLine &&
-          !trimmedLine.startsWith("#") &&
-          !trimmedLine.startsWith("http")
-        ) {
-          if (trimmedLine.startsWith("/")) {
-            return `${zillaBaseUrl}${trimmedLine}`;
-          } else {
-            return `${tokenBasePath}${trimmedLine}`;
-          }
-        }
-        return line;
-      })
-      .join("\n");
-
-    res.setHeader("Content-Type", "application/x-mpegURL");
-    res.setHeader("Access-Control-Allow-Origin", "*");
-
-    return res.status(200).send(manifestText);
-  } catch (error: any) {
-    console.error("Error en el proxy de streaming:", error);
-    return res
-      .status(500)
-      .json({ error: "Fallo interno al conectar con el servidor de video" });
   }
 };
